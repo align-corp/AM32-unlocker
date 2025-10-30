@@ -4,8 +4,7 @@ UI for unlocking ESC MCUs for AM32 project
 '''
 
 PROBE_LIST = ["ST Link", "JLink", "CMSIS-DAP"]
-MCU_LIST = ["F031", "F051", "G071", "G071_64K", "L431", "E230", "F415", "F421"]
-PIN_LIST = ["PA0","PA2","PA6","PB4","PA15"]
+MCU_LIST = ["F421", "F031", "F051", "G071", "G071_64K", "L431", "E230", "F415"]
 
 import tkinter as tk
 from tkinter import ttk, scrolledtext, filedialog
@@ -112,7 +111,6 @@ def run_openocd():
     elif probe_type == "CMSIS-DAP":
         probe_type = "cmsis-dap"
 
-    pin = pin_var.get()
     if mode_var.get() == "Lock":
         op = "lock"
     else:
@@ -133,10 +131,10 @@ def run_openocd():
     if custom_bootloader:
         bootloader = custom_bootloader
     else:
-        bootloader = os.path.join("bootloaders", f"AM32_{mcu_base}_BOOTLOADER_{pin}{k_tag}_V14.bin")
-        bootloader = get_resource_path(bootloader)
+        log_message("Error: no firmware selected")
+        return
 
-    log_message("Starting MCU %s PIN %s op %s" % (mcu_type, pin, op))
+    log_message("Starting MCU %s op %s" % (mcu_type, op))
 
     using_tempfile = False
 
@@ -226,7 +224,7 @@ def update_status_led(color):
 
 # Initialize GUI
 root = tk.Tk()
-root.title("AM32 ESC Unlocker")
+root.title("AM32 ESC Unlocker Align")
 
 root.grid_rowconfigure(7, weight=1)
 root.grid_columnconfigure(0, weight=1)
@@ -247,13 +245,6 @@ mcu_label = ttk.Label(root, text="Select MCU Type:")
 mcu_label.grid(row=0, column=0, padx=10, pady=10)
 mcu_dropdown = ttk.OptionMenu(root, mcu_var, MCU_LIST[0], *MCU_LIST)
 mcu_dropdown.grid(row=0, column=1, padx=10, pady=10)
-
-# pin selection
-pin_var = tk.StringVar()
-pin_label = ttk.Label(root, text="Signal Pin:")
-pin_label.grid(row=1, column=0, padx=10, pady=10)
-pin_dropdown = ttk.OptionMenu(root, pin_var, PIN_LIST[0], *PIN_LIST)
-pin_dropdown.grid(row=1, column=1, padx=10, pady=10)
 
 # locking mode
 mode_var = tk.StringVar()
@@ -278,27 +269,25 @@ led = canvas.create_oval(5, 5, 20, 20, fill="gray")
 
 # Custom Bootloader selection
 def select_bootloader_file():
-    file_path = filedialog.askopenfilename(title="Custom Bootloader", filetypes=[("Bin and hex files", "*.bin *.hex"), ("All files", "*.*")])
+    file_path = filedialog.askopenfilename(title="Full Firmware", filetypes=[("Bin and hex files", "*.bin *.hex"), ("All files", "*.*")])
     if file_path:
         bootloader_var.set(file_path)
 
 bootloader_var = tk.StringVar()
-bootloader_label = ttk.Label(root, text="Custom Bootloader:")
+bootloader_label = ttk.Label(root, text="Full Firmware:")
 bootloader_label.grid(row=5, column=0, padx=10, pady=10)
 bootloader_entry = ttk.Entry(root, textvariable=bootloader_var, width=40)
 bootloader_entry.grid(row=5, column=1, columnspan=2, padx=10, pady=10)
 bootloader_button = ttk.Button(root, text="Browse...", command=select_bootloader_file)
 bootloader_button.grid(row=5, column=3, padx=10, pady=10)
 
-bootloader_label = ttk.Label(root, text="Custom Bootloader:")
+bootloader_label = ttk.Label(root, text="Full Firmware:")
 bootloader_label.grid(row=5, column=0, padx=10, pady=10)
 
 warn = tk.Text(root, wrap='word', height=5, bg='lightgrey')
 warn.insert(tk.END,
-'''NOTE! The included bootloaders are the latest development versions.
-For the stable bootloaders please download from
-  https://am32.ca/downloads
-and use the Custom Bootloader option
+'''Select the full firmware bin: Bootloader + Firmware + EEPROM
+Default setting are already set for M3 and M450/60/90 ESC
 ''')
 warn.config(state=tk.DISABLED)
 warn.grid(row=6, column=0, columnspan=4, padx=10, pady=10)
