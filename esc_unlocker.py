@@ -4,7 +4,7 @@ UI for unlocking ESC MCUs for AM32 project
 '''
 
 PROBE_LIST = ["ST Link", "JLink", "CMSIS-DAP"]
-MCU_LIST = ["F421", "F031", "F051", "G071", "G071_64K", "L431", "E230", "F415"]
+MCU_LIST = ["F421", "L431"]
 
 import tkinter as tk
 from tkinter import ttk, scrolledtext, filedialog
