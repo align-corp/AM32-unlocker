@@ -13,49 +13,15 @@ import os
 import sys
 import threading
 import time
+import shutil
 from datetime import datetime
 import intelhex
 
-import numpy as np
-import simpleaudio as sa
 import platform
 import tempfile
 
 is_windows = platform.system() == "Windows"
 is_macos = platform.system() == "Darwin"
-
-pending_tones = []
-
-def play_tone(frequency, duration=0.1, volume=0.2):
-    '''
-    play a tone
-    '''
-    try:
-        sample_rate = 44100  # samples per second
-        t = np.linspace(0, duration, int(sample_rate * duration), False)
-        wave = np.sin(frequency * t * 2 * np.pi)
-    
-        audio = (wave * (32767 * volume)).astype(np.int16)
-    
-        play_obj = sa.play_buffer(audio, 1, 2, sample_rate)
-        play_obj.wait_done()
-    except Exception as e:
-        print(e)
-        pass
-
-
-def play_searching():
-    print("Searching")
-    pending_tones.append((300, 0.1))
-
-def play_found():
-    print("Found")
-    pending_tones.append((880, 0.1))
-
-def play_success():
-    pending_tones.append((600, 0.1))
-    pending_tones.append((800, 0.1))
-    pending_tones.append((1000, 0.1))
 
 
 def log_message(msg):
@@ -84,17 +50,26 @@ def get_resource_path(relative_path):
         ret = ret.replace("\\", "\\\\")
     return ret
 
-    
+
 def get_openocd():
     '''get path to openocd'''
     if is_windows:
-        openocd = "tools/windows/openocd/bin/openocd.exe"
+        return get_resource_path("tools/windows/openocd/bin/openocd.exe")
     elif is_macos:
-        openocd = "tools/macos/openocd/bin/openocd"
+        bundled = get_resource_path("tools/macos/openocd/bin/openocd")
+        if os.path.exists(bundled):
+            try:
+                subprocess.run([bundled, "--version"], capture_output=True, timeout=5)
+                return bundled
+            except (OSError, subprocess.SubprocessError):
+                pass
+        system = shutil.which("openocd")
+        if system:
+            print(f"Bundled OpenOCD not usable, falling back to system: {system}")
+            return system
+        raise FileNotFoundError("OpenOCD not found. Please install it (e.g. brew install openocd)")
     else:
-        # assume Linux
-        openocd = "tools/linux/openocd/bin/openocd"
-    return get_resource_path(openocd)
+        return get_resource_path("tools/linux/openocd/bin/openocd")
 
 def run_openocd():
     '''
@@ -129,7 +104,7 @@ def run_openocd():
         log_message("Error: no firmware selected")
         return
 
-    log_message("Starting MCU %s unlock" % mcu_type)
+    log_message("Starting MCU %s flash" % mcu_type)
 
     using_tempfile = False
 
@@ -176,18 +151,15 @@ def run_openocd():
                 log_message(outerr)
             if outerr.find("Cortex-M") != -1:
                 # found the MCU
-                play_found()
                 root.after(0, lambda: update_status_led("orange"))
             else:
                 # we're still looking for the MCU
-                play_searching()
                 root.after(0, lambda: update_status_led("red"))
             retcode = process.poll()
             if retcode is not None:
                 if retcode == 0:
                     log_message("Success")
-                    print("Unlock successful.")
-                    play_success()
+                    print("Flash successful.")
                     root.after(0, lambda: update_status_led("green"))
                     running = False
         except Exception as e:
@@ -266,32 +238,18 @@ bootloader_entry = ttk.Entry(root, textvariable=bootloader_var, width=40)
 bootloader_entry.grid(row=5, column=1, columnspan=2, padx=10, pady=10)
 bootloader_button = ttk.Button(root, text="Browse...", command=select_bootloader_file)
 bootloader_button.grid(row=5, column=3, padx=10, pady=10)
-
-bootloader_label = ttk.Label(root, text="Full Firmware:")
-bootloader_label.grid(row=5, column=0, padx=10, pady=10)
-
-warn = tk.Text(root, wrap='word', height=5, bg='lightgrey')
-warn.insert(tk.END,
-'''Select the full firmware bin: Bootloader + Firmware + EEPROM
-Default setting are already set for M3 and M450/60/90 ESC
-''')
-warn.config(state=tk.DISABLED)
-warn.grid(row=6, column=0, columnspan=4, padx=10, pady=10)
+warning_txt = """Select the full firmware bin: Bootloader + Firmware + EEPROM
+MCU Type F421 -> 4-in-1 (M3-M450-M460-M490)
+MCU Type L431 -> Align custom CAN ESC (M450-M460-M490)
+"""
+warn = ttk.Label(root, text=warning_txt, justify=tk.LEFT)
+warn.grid(row=6, column=0, columnspan=4, padx=10, pady=10, sticky="w")
 
 
 output_text = scrolledtext.ScrolledText(root, wrap=tk.WORD, width=50, height=10)
 output_text.grid(row=7, column=0, columnspan=4, padx=10, pady=10, sticky="nsew")
 
 running = False
-
-def play_tones():
-    '''callback to play tones'''
-    while len(pending_tones) > 0:
-        tone,duration = pending_tones.pop()
-        play_tone(tone, duration)
-    root.after(10, play_tones)
-
-root.after(10, play_tones)
 
 # Start the GUI event loop
 root.mainloop()
