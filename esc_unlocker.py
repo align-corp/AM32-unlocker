@@ -111,18 +111,13 @@ def run_openocd():
     elif probe_type == "CMSIS-DAP":
         probe_type = "cmsis-dap"
 
-    if mode_var.get() == "Lock":
-        op = "lock"
-    else:
-        op = "unlock"
-
     if mcu_type.find("_") != -1:
         mcu_base = mcu_type.split('_')[0]
         k_tag = "_" + mcu_type.split('_')[1]
     else:
         mcu_base = mcu_type
         k_tag = ''
-    config_file = f"MCU/{mcu_base}/openocd-{op}.cfg"
+    config_file = f"MCU/{mcu_base}/openocd-unlock.cfg"
     probe_file = get_resource_path(f"probes/{probe_type}.cfg")
 
     config_file = get_resource_path(config_file)
@@ -134,7 +129,7 @@ def run_openocd():
         log_message("Error: no firmware selected")
         return
 
-    log_message("Starting MCU %s op %s" % (mcu_type, op))
+    log_message("Starting MCU %s unlock" % mcu_type)
 
     using_tempfile = False
 
@@ -173,29 +168,27 @@ def run_openocd():
 
             output = process.stdout.read().decode()
             if output:
-                output_text.insert(tk.END, output)
-                output_text.see(tk.END)
+                root.after(0, lambda t=output: (output_text.insert(tk.END, t), output_text.see(tk.END)))
                 log_message(output)
             outerr = process.stderr.read().decode()
             if outerr:
-                output_text.insert(tk.END, outerr)
-                output_text.see(tk.END)
+                root.after(0, lambda t=outerr: (output_text.insert(tk.END, t), output_text.see(tk.END)))
                 log_message(outerr)
             if outerr.find("Cortex-M") != -1:
                 # found the MCU
                 play_found()
-                update_status_led("orange")
+                root.after(0, lambda: update_status_led("orange"))
             else:
                 # we're still looking for the MCU
                 play_searching()
-                update_status_led("red")
+                root.after(0, lambda: update_status_led("red"))
             retcode = process.poll()
             if retcode is not None:
                 if retcode == 0:
                     log_message("Success")
-                    print("%s successful." % mode_var.get())
+                    print("Unlock successful.")
                     play_success()
-                    update_status_led("green")
+                    root.after(0, lambda: update_status_led("green"))
                     running = False
         except Exception as e:
             print(f"Error running OpenOCD: {e}")
@@ -245,13 +238,6 @@ mcu_label = ttk.Label(root, text="Select MCU Type:")
 mcu_label.grid(row=0, column=0, padx=10, pady=10)
 mcu_dropdown = ttk.OptionMenu(root, mcu_var, MCU_LIST[0], *MCU_LIST)
 mcu_dropdown.grid(row=0, column=1, padx=10, pady=10)
-
-# locking mode
-mode_var = tk.StringVar()
-mode_label = ttk.Label(root, text="Select Mode:")
-mode_label.grid(row=1, column=2, padx=10, pady=10)
-mode_dropdown = ttk.OptionMenu(root, mode_var, "Unlock", "Unlock", "Lock")
-mode_dropdown.grid(row=1, column=3, padx=10, pady=10)
 
 # Start and Stop buttons
 start_button = ttk.Button(root, text="Start", command=start_openocd)
