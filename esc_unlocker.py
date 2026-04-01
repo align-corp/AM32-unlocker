@@ -3,6 +3,7 @@
 UI for unlocking ESC MCUs for AM32 project
 '''
 
+VERSION = "0.1"
 PROBE_LIST = ["ST Link", "JLink", "CMSIS-DAP"]
 MCU_LIST = ["F421", "L431"]
 
@@ -189,7 +190,7 @@ def update_status_led(color):
 
 # Initialize GUI
 root = tk.Tk()
-root.title("AM32 ESC Unlocker Align")
+root.title(f"AM32 ESC Flasher Align v{VERSION}")
 
 root.grid_rowconfigure(7, weight=1)
 root.grid_columnconfigure(0, weight=1)
