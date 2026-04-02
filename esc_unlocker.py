@@ -5,7 +5,7 @@ UI for unlocking ESC MCUs for AM32 project
 
 VERSION = "0.1"
 PROBE_LIST = ["ST Link", "JLink", "CMSIS-DAP"]
-MCU_LIST = ["F421", "L431"]
+MCU_LIST = ["H7x", "G0x", "L4x", "F421"]
 
 import tkinter as tk
 from tkinter import ttk, scrolledtext, filedialog
@@ -239,9 +239,11 @@ bootloader_entry = ttk.Entry(root, textvariable=bootloader_var, width=40)
 bootloader_entry.grid(row=5, column=1, columnspan=2, padx=10, pady=10)
 bootloader_button = ttk.Button(root, text="Browse...", command=select_bootloader_file)
 bootloader_button.grid(row=5, column=3, padx=10, pady=10)
-warning_txt = """Select the full firmware bin: Bootloader + Firmware + EEPROM
+warning_txt = """Select the right MCU:
+MCU Type H7x -> Align Flight Controller (AP6-AP6mini)
+MCU Type G0x -> Align Mower
+MCU Type L4x -> Align custom CAN ESC (M450-M460-M490)
 MCU Type F421 -> 4-in-1 (M3-M450-M460-M490)
-MCU Type L431 -> Align custom CAN ESC (M450-M460-M490)
 """
 warn = ttk.Label(root, text=warning_txt, justify=tk.LEFT)
 warn.grid(row=6, column=0, columnspan=4, padx=10, pady=10, sticky="w")
