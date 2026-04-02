@@ -16,10 +16,13 @@ options = "--onefile --windowed --hidden-import=simpleaudio --add-data bootloade
 
 if is_windows:
     options += " --add-data=tools/windows:tools/windows"
+    options += " --icon=icon/icon.ico"
 elif is_macos:
     options += " --add-data=tools/macos:tools/macos"
+    options += " --icon=icon/icon.icns"
 else:
     options += " --add-data=tools/linux:tools/linux"
+    options += " --icon=icon/icon.png"
 
 try:
     shutil.rmtree("dist")
