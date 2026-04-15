@@ -4,7 +4,7 @@ UI for unlocking ESC MCUs for AM32 project
 '''
 
 VERSION = "0.2"
-PROBE_LIST = ["ST Link", "JLink", "CMSIS-DAP"]
+PROBE = "stlink"
 MCU_LIST = ["H7x", "G0x", "L4x", "F421"]
 
 import tkinter as tk
@@ -17,12 +17,69 @@ import time
 import shutil
 from datetime import datetime
 import intelhex
-
+import locale
 import platform
 import tempfile
 
 is_windows = platform.system() == "Windows"
 is_macos = platform.system() == "Darwin"
+
+TRANSLATIONS = {
+    "en": {
+        "select_mcu": "Select MCU Type:",
+        "start": "Start",
+        "stop": "Stop",
+        "quit": "Quit",
+        "firmware": "Full Firmware:",
+        "browse": "Browse...",
+        "select_firmware": "Full Firmware",
+        "warning": (
+            "Select the right MCU:\n"
+            "MCU Type H7x -> Align Flight Controller (AP6-AP6mini)\n"
+            "MCU Type G0x -> Align Mower\n"
+            "MCU Type L4x -> Align custom CAN ESC (M450-M460-M490)\n"
+            "MCU Type F421 -> 4-in-1 (M3-M450-M460-M490)"
+        ),
+        "lang_btn": "中文",
+    },
+    "zh_TW": {
+        "select_mcu": "選擇 MCU 類型:",
+        "start": "開始",
+        "stop": "停止",
+        "quit": "退出程式",
+        "firmware": "完整韌體:",
+        "browse": "瀏覽...",
+        "select_firmware": "完整韌體",
+        "warning": (
+            "請選擇正確的 MCU：\n"
+            "MCU 類型 H7x -> Align 飛控（AP6-AP6mini）\n"
+            "MCU 類型 G0x -> Align 割草機\n"
+            "MCU 類型 L4x -> Align 自訂 CAN ESC（M450-M460-M490）\n"
+            "MCU 類型 F421 -> 四合一（M3-M450-M460-M490）"
+        ),
+        "lang_btn": "English",
+    },
+}
+
+
+def get_system_language():
+    """Detect system language and return 'zh_TW' or 'en'."""
+    try:
+        system_locale = locale.getlocale()[0]
+        if not system_locale:
+            system_locale = os.environ.get('LANG', '') or os.environ.get('LC_ALL', '')
+        if system_locale and system_locale.lower().startswith('zh'):
+            return 'zh_TW'
+    except Exception:
+        pass
+    return 'en'
+
+
+current_lang = get_system_language()
+
+
+def tr(key):
+    return TRANSLATIONS.get(current_lang, {}).get(key, key)
 
 
 def log_message(msg):
@@ -79,13 +136,7 @@ def run_openocd():
     global running
     running = True
     mcu_type = mcu_var.get()
-    probe_type = probe_var.get()
-    if probe_type == "ST Link":
-        probe_type = "stlink"
-    elif probe_type == "JLink":
-        probe_type = "jlink"
-    elif probe_type == "CMSIS-DAP":
-        probe_type = "cmsis-dap"
+    probe_type = PROBE
 
     if mcu_type.find("_") != -1:
         mcu_base = mcu_type.split('_')[0]
@@ -188,6 +239,27 @@ def quit():
 def update_status_led(color):
     canvas.itemconfig(led, fill=color)
 
+def toggle_language():
+    global current_lang
+    current_lang = "zh_TW" if current_lang == "en" else "en"
+    update_all_texts()
+
+def update_all_texts():
+    mcu_label.config(text=tr("select_mcu"))
+    start_button.config(text=tr("start"))
+    stop_button.config(text=tr("stop"))
+    quit_button.config(text=tr("quit"))
+    bootloader_label.config(text=tr("firmware"))
+    bootloader_button.config(text=tr("browse"))
+    warn.config(text=tr("warning"))
+    lang_btn.config(text=tr("lang_btn"))
+
+def select_bootloader_file():
+    file_path = filedialog.askopenfilename(title=tr("select_firmware"), filetypes=[("Bin and hex files", "*.bin *.hex"), ("All files", "*.*")])
+    if file_path:
+        bootloader_var.set(file_path)
+
+
 # Initialize GUI
 root = tk.Tk()
 root.title(f"Align Flash Tool v{VERSION}")
@@ -198,28 +270,25 @@ root.grid_columnconfigure(1, weight=1)
 root.grid_columnconfigure(2, weight=1)
 root.grid_columnconfigure(3, weight=1)
 
-# Probe selection
-probe_var = tk.StringVar()
-probe_label = ttk.Label(root, text="Select Probe:")
-probe_label.grid(row=0, column=2, padx=10, pady=10)
-probe_dropdown = ttk.OptionMenu(root, probe_var, PROBE_LIST[0], *PROBE_LIST)
-probe_dropdown.grid(row=0, column=3, padx=10, pady=10)
-
 # MCU type selection
 mcu_var = tk.StringVar()
-mcu_label = ttk.Label(root, text="Select MCU Type:")
+mcu_label = ttk.Label(root, text=tr("select_mcu"))
 mcu_label.grid(row=0, column=0, padx=10, pady=10)
 mcu_dropdown = ttk.OptionMenu(root, mcu_var, MCU_LIST[0], *MCU_LIST)
 mcu_dropdown.grid(row=0, column=1, padx=10, pady=10)
 
+# Language toggle button
+lang_btn = ttk.Button(root, text=tr("lang_btn"), command=toggle_language)
+lang_btn.grid(row=0, column=3, padx=10, pady=10)
+
 # Start and Stop buttons
-start_button = ttk.Button(root, text="Start", command=start_openocd)
+start_button = ttk.Button(root, text=tr("start"), command=start_openocd)
 start_button.grid(row=2, column=1, padx=10, pady=10)
-stop_button = ttk.Button(root, text="Stop", command=stop_openocd)
+stop_button = ttk.Button(root, text=tr("stop"), command=stop_openocd)
 stop_button.grid(row=2, column=2, padx=10, pady=10)
 
-stop_button = ttk.Button(root, text="Quit", command=quit)
-stop_button.grid(row=2, column=3, padx=10, pady=10)
+quit_button = ttk.Button(root, text=tr("quit"), command=quit)
+quit_button.grid(row=2, column=3, padx=10, pady=10)
 
 # Status LED
 canvas = tk.Canvas(root, width=20, height=20)
@@ -227,27 +296,16 @@ canvas.grid(row=2, column=0, columnspan=1, pady=10)
 led = canvas.create_oval(5, 5, 20, 20, fill="gray")
 
 # Custom Bootloader selection
-def select_bootloader_file():
-    file_path = filedialog.askopenfilename(title="Full Firmware", filetypes=[("Bin and hex files", "*.bin *.hex"), ("All files", "*.*")])
-    if file_path:
-        bootloader_var.set(file_path)
-
 bootloader_var = tk.StringVar()
-bootloader_label = ttk.Label(root, text="Full Firmware:")
+bootloader_label = ttk.Label(root, text=tr("firmware"))
 bootloader_label.grid(row=5, column=0, padx=10, pady=10)
 bootloader_entry = ttk.Entry(root, textvariable=bootloader_var, width=40)
 bootloader_entry.grid(row=5, column=1, columnspan=2, padx=10, pady=10)
-bootloader_button = ttk.Button(root, text="Browse...", command=select_bootloader_file)
+bootloader_button = ttk.Button(root, text=tr("browse"), command=select_bootloader_file)
 bootloader_button.grid(row=5, column=3, padx=10, pady=10)
-warning_txt = """Select the right MCU:
-MCU Type H7x -> Align Flight Controller (AP6-AP6mini)
-MCU Type G0x -> Align Mower
-MCU Type L4x -> Align custom CAN ESC (M450-M460-M490)
-MCU Type F421 -> 4-in-1 (M3-M450-M460-M490)
-"""
-warn = ttk.Label(root, text=warning_txt, justify=tk.LEFT)
-warn.grid(row=6, column=0, columnspan=4, padx=10, pady=10, sticky="w")
 
+warn = ttk.Label(root, text=tr("warning"), justify=tk.LEFT)
+warn.grid(row=6, column=0, columnspan=4, padx=10, pady=10, sticky="w")
 
 output_text = scrolledtext.ScrolledText(root, wrap=tk.WORD, width=50, height=10)
 output_text.grid(row=7, column=0, columnspan=4, padx=10, pady=10, sticky="nsew")
