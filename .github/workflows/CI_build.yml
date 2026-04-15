@@ -46,7 +46,7 @@ jobs:
       - name: Package (Windows)
         if: runner.os == 'Windows'
         run: |
-          Move-Item esc_unlocker_windows.exe Align_flash_tool.exe
+          Move-Item dist/main.exe Align_flash_tool.exe
           Compress-Archive -Path Align_flash_tool.exe -DestinationPath Align_flash_tool_${{ matrix.os }}.zip
 
       - name: Package (Linux)
