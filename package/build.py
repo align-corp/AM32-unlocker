@@ -12,15 +12,18 @@ is_macos = platform.system() == "Darwin"
 MCUPath = "MCU"
 
 # Initialize the options for PyInstaller
-options = "--onefile --windowed --add-data probes:probes"
+options = "--windowed --add-data probes:probes"
 
 if is_windows:
+    options += " --onefile"
     options += " --add-data=tools/windows:tools/windows"
     options += " --icon=icon/icon.ico"
 elif is_macos:
+    options += " --onedir"
     options += " --add-data=tools/macos:tools/macos"
     options += " --icon=icon/icon.icns"
 else:
+    options += " --onefile"
     options += " --add-data=tools/linux:tools/linux"
     options += " --icon=icon/icon.png"
 
@@ -50,15 +53,4 @@ except subprocess.CalledProcessError as e:
     print(f"Error: PyInstaller failed with exit code {e.returncode}")
     sys.exit(1)
 
-if is_windows:
-    src_file = "dist/esc_unlocker.exe"
-    release_file = "esc_unlocker_windows.exe"
-elif is_macos:
-    src_file = "dist/esc_unlocker"
-    release_file = "esc_unlocker_macos"
-else:
-    src_file = "dist/esc_unlocker"
-    release_file = "esc_unlocker_linux"
-
-shutil.copy(src_file, release_file)
-print(f"Created {release_file}")
+print("Success")
