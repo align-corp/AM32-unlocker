@@ -1,5 +1,7 @@
 *.log
 .DS_Store
+.python-version
+main.spec
 build/
 dist/
 esc_unlocker.spec
