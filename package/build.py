@@ -11,8 +11,12 @@ is_macos = platform.system() == "Darwin"
 # Define the path to the MCU directory
 MCUPath = "MCU"
 
+# Display/bundle name for the produced app (sets CFBundleName on macOS,
+# the .exe name on Windows, and the binary name on Linux).
+APP_NAME = "flash-tool"
+
 # Initialize the options for PyInstaller
-options = "--windowed --add-data probes:probes"
+options = f'--windowed --name "{APP_NAME}" --add-data probes:probes'
 
 if is_windows:
     options += " --onefile"
