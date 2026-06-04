@@ -1,3 +1,12 @@
+Align
+-----------------
+openocd gui to flash full firmwares for Align production line.
+For simplicity, the flash start address is hardcoded to 0x08000000,
+so the binary must include bootloader.
+
+Just run with `python main.py` 
+or generate the installer with `python package/build.py`
+
 AM32 ESC Unlocker
 -----------------
 
