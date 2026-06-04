@@ -46,16 +46,16 @@ jobs:
       - name: Package (Windows)
         if: runner.os == 'Windows'
         run: |
-          Move-Item dist/main.exe Align_flash_tool.exe
+          Move-Item "dist/flash-tool.exe" Align_flash_tool.exe
           Compress-Archive -Path Align_flash_tool.exe -DestinationPath Align_flash_tool_${{ matrix.os }}.zip
 
       - name: Package (Linux)
         if: runner.os == 'Linux'
-        run: zip Align_flash_tool_${{ matrix.os }}.zip esc_unlocker_linux
+        run: zip Align_flash_tool_${{ matrix.os }}.zip "dist/flash-tool"
 
       - name: Package (macOS)
         if: runner.os == 'macOS'
-        run: zip Align_flash_tool_${{ matrix.os }}.zip esc_unlocker_macos
+        run: zip -r Align_flash_tool_${{ matrix.os }}.zip "dist/flash-tool.app"
 
       - name: Archive build
         uses: actions/upload-artifact@v7
