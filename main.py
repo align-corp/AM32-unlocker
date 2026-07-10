@@ -36,8 +36,8 @@ TRANSLATIONS = {
         "warning": (
             "Select the right MCU:\n"
             "MCU Type H7x -> Align Flight Controller (AP6-AP6mini)\n"
-            "MCU Type G0x -> Align Mower\n"
-            "MCU Type L4x -> Align custom CAN ESC (M450-M460-M490)\n"
+            "MCU Type G0x -> Align Mower and LED Panel\n"
+            "MCU Type L4x -> Align ESC and PCU\n"
             "MCU Type F421 -> 4-in-1 (M3-M450-M460-M490)"
         ),
         "lang_btn": "中文",
@@ -53,8 +53,8 @@ TRANSLATIONS = {
         "warning": (
             "請選擇正確的 MCU：\n"
             "MCU 類型 H7x -> Align 飛控（AP6-AP6mini）\n"
-            "MCU 類型 G0x -> Align 割草機\n"
-            "MCU 類型 L4x -> Align 自訂 CAN ESC（M450-M460-M490）\n"
+            "MCU 類型 G0x -> Align 割草機與 LED 面板\n"
+            "MCU 類型 L4x -> Align ESC 與 PCU\n"
             "MCU 類型 F421 -> 四合一（M3-M450-M460-M490）"
         ),
         "lang_btn": "English",
